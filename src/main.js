@@ -19,11 +19,12 @@ function calculateSimpleRevenue(purchase, _product) {
  * @returns {number}
  */
 function calculateBonusByProfit(index, total, seller) {
+  const sellerProfit = seller.profit;
   // @TODO: Расчет бонуса от позиции в рейтинге
-  if (index === 0) return 15;
-  if (index === 1 || index === 2) return 10;
+  if (index === 0) return sellerProfit * 0.15;
+  if (index === 1 || index === 2) return sellerProfit * 0.10;
   if (index === total - 1) return 0;
-  return 5;
+  return sellerProfit * 0.05;
 }
 
 /**
@@ -43,6 +44,13 @@ function analyzeSalesData(data, options) {
   if (!data || !Array.isArray(data.sellers) || data.sellers.length === 0) {
     throw new Error("Некорректные входные данные");
   }
+
+  if(!data.purchase_records 
+  || !Array.isArray(data.purchase_records)
+  || data.purchase_records.length === 0){
+    throw new Error('Некорректные входные данные')
+  }
+  
   // @TODO: Подготовка промежуточных данных для сбора статистики
   const sellersStats = data.sellers.map((seller) => ({
     id: seller.id,
@@ -87,7 +95,7 @@ function analyzeSalesData(data, options) {
   const total = sellersStats.length;
   sellersStats.forEach((seller, index) => {
     const bonusPercent = calculateBonus(index, total, seller);
-    seller.bonus = (bonusPercent * seller.profit) / 100;
+    seller.bonus = calculateBonus(index, total, seller);
 
     seller.top_products = Object.entries(seller.products_sold)
       .map(([sku, quantity]) => ({ sku, quantity }))
